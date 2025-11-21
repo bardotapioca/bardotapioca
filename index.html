@@ -928,36 +928,47 @@
         }
 
         async function handleAdminLogin(event) {
-            event.preventDefault();
-            
-            const formData = new FormData(elements.loginForm);
-            const loginData = {
-                username: formData.get('username'),
-                password: formData.get('password')
-            };
+    event.preventDefault();
+    
+    const formData = new FormData(elements.loginForm);
+    const loginData = {
+        username: formData.get('username'),
+        password: formData.get('password')
+    };
 
-            try {
-                elements.loading.style.display = 'block';
-                const response = await fetch(`${BACKEND_URL}/api/admin/login`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(loginData)
-                });
+    try {
+        elements.loading.style.display = 'block';
+        console.log('Tentando login:', loginData);
+        
+        const response = await fetch(`${BACKEND_URL}/api/admin/login`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(loginData)
+        });
 
-                if (response.ok) {
-                    showAdminPanel();
-                } else {
-                    throw new Error('Credenciais inválidas');
-                }
-            } catch (error) {
-                console.error('Erro:', error);
-                showMessage('Usuário ou senha inválidos!', 'error');
-            } finally {
-                elements.loading.style.display = 'none';
-            }
+        console.log('Status da resposta:', response.status);
+        
+        // Verifica se a resposta é OK (status 200-299)
+        if (response.ok) {
+            const data = await response.json();
+            console.log('Login bem-sucedido:', data);
+            showMessage('Login realizado com sucesso!', 'success');
+            showAdminPanel();
+        } else {
+            // Se não for OK, tenta ler a mensagem de erro
+            const errorData = await response.json();
+            console.log('Erro do servidor:', errorData);
+            throw new Error(errorData.error || 'Credenciais inválidas');
         }
+    } catch (error) {
+        console.error('Erro no login:', error);
+        showMessage(error.message || 'Erro ao fazer login. Tente novamente.', 'error');
+    } finally {
+        elements.loading.style.display = 'none';
+    }
+}
 
         async function loadOrders() {
             try {
